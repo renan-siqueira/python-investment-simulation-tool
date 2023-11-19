@@ -1,15 +1,12 @@
 import yfinance as yf
 
-
-def get_stock_data(ticker, start_date, end_date):
+def get_stock_data(ticker, period="max"):
     """
-    Extrai os dados históricos de ações do Yahoo Finance.
+    Extracts all available historical stock data from Yahoo Finance.
 
-    :param ticker: Símbolo da ação.
-    :param start_date: Data de início para os dados históricos.
-    :param end_date: Data de término para os dados históricos.
-    :return: DataFrame com os dados históricos.
+    :param ticker: Symbol of the stock.
+    :return: DataFrame with all available historical data.
     """
     stock = yf.Ticker(ticker)
-    data = stock.history(start=start_date, end=end_date)
-    return data['Close']  # Retorna apenas os preços de fechamento
+    data = stock.history(period=period)
+    return data
