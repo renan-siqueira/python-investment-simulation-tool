@@ -1,21 +1,31 @@
+import pandas as pd
 import matplotlib.pyplot as plt
-from src.modules.data_extractor import get_stock_data
+from datetime import timedelta
+from src.settings import config
 
-
-# Função para simular o investimento
 def simulate_investment(data, buy_date, sell_date):
-    if buy_date not in data.index or sell_date not in data.index:
-        return "As datas de compra ou venda não estão no intervalo de dados."
+    # Convertendo strings de data para objetos datetime
+    buy_date = pd.to_datetime(buy_date)
+    sell_date = pd.to_datetime(sell_date)
 
-    buy_price = data.loc[buy_date]  # Ajustado para obter o preço diretamente
-    sell_price = data.loc[sell_date]  # Ajustado para obter o preço diretamente
+    # Calculando o intervalo de datas para o gráfico
+    start_date = buy_date - timedelta(days=90)
+    end_date = sell_date + timedelta(days=90)
+
+    # Limitando os dados ao intervalo de interesse
+    plot_data = data.loc[start_date:end_date]
+
+    if buy_date not in plot_data.index or sell_date not in plot_data.index:
+        return "Purchase or sale dates are not in the data range."
+
+    buy_price = plot_data.loc[buy_date, 'Close']
+    sell_price = plot_data.loc[sell_date, 'Close']
     return_on_investment = (sell_price - buy_price) / buy_price * 100
 
-    # Plotando o gráfico
     plt.figure(figsize=(10, 6))
-    plt.plot(data.index, data, label='Preço da Ação')  # Ajustado para usar a série de dados
+    plt.plot(plot_data.index, plot_data['Close'], label='Preço da Ação')
     plt.scatter([buy_date, sell_date], [buy_price, sell_price], color='red')
-    plt.title(f'Investimento em Ações: Compra em {buy_date}, Venda em {sell_date}')
+    plt.title(f'Investimento em Ações: Compra em {buy_date.date()}, Venda em {sell_date.date()}')
     plt.xlabel('Data')
     plt.ylabel('Preço da Ação')
     plt.legend()
@@ -26,13 +36,13 @@ def simulate_investment(data, buy_date, sell_date):
 
 
 def main():
-
     ticker = "AAPL"
-    start_date = "2020-01-01"
-    end_date = "2020-12-31"
-    data = get_stock_data(ticker, start_date, end_date)
+    data = pd.read_csv(f"{config.APP_PATH_ASSETS_CSV_FOLDER}/{ticker.lower()}.csv")
 
-    # Testando a função com datas de exemplo
+    data['Date'] = data['Date'].apply(lambda x: pd.to_datetime(x).strftime('%Y-%m-%d'))
+    data.set_index('Date', inplace=True)
+    data.index = pd.to_datetime(data.index)
+
     result = simulate_investment(data, '2020-06-01', '2020-12-01')
     print('Return (%):', result)
 
